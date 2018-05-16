@@ -1,7 +1,7 @@
 /*
 第一阶段错误：1. mknod中的name变量一开始没使用数组，使用指针没有分配空间导致段错误
 				2.mknod中查询imap表时，对于imap==0的判定写成了imap=0，导致错误
-			这两个错误解决完成后，文件读写删除操作正常。 
+			这两个错误解决完成后，文件读写删除操作正常。
 */
 
 #define FUSE_USE_VERSION 26
@@ -47,7 +47,7 @@ static char *imap, *bmap; //单字节的imap，bmap表
 
 static int get_inode(const char *path)
 {
-	printf("get_inode: %s\n", path);
+    printf("get_inode: %s\n", path);
     size_t blocknr = sizeof(block) / sizeof(block[0]);
     size_t blocksize = size / blocknr;
     size_t maxinode = blocknr;
@@ -56,11 +56,11 @@ static int get_inode(const char *path)
     {
         if(imap[i]==1)
         {
-        	printf("%d  |  \n", inode[i]->firstblockID);
-        	printf("{%s:%s}", fblock[inode[i]->firstblockID]->path, path);
+            printf("%d  |  \n", inode[i]->firstblockID);
+            printf("{%s:%s}", fblock[inode[i]->firstblockID]->path, path);
             if(strcmp(fblock[inode[i]->firstblockID]->path, path)==0)
             {
-            	printf("get_inode end1\n");
+                printf("get_inode end1\n");
                 return i;
             }
         }
@@ -72,7 +72,7 @@ static int get_inode(const char *path)
 
 static int new_block()
 {
-	printf("new_block\n");
+    printf("new_block\n");
     size_t blocknr = sizeof(block) / sizeof(block[0]);
     size_t blocksize = size / blocknr;
     //查询bmap表
@@ -100,7 +100,7 @@ static int new_block()
 
 static int release_block(void *node)
 {
-	printf("release_block\n");
+    printf("release_block\n");
     size_t blocknr = sizeof(block) / sizeof(block[0]);
     size_t blocksize = size / blocknr;
     struct NormalBlock *nnodep, *nnodeq;
@@ -123,13 +123,13 @@ static int release_block(void *node)
 
 static void output()
 {
-	for(int i=0; i<=25; i++)
-    	printf("imap[%d]==%d\n", i, imap[i]);
+    for(int i=0; i<=25; i++)
+        printf("imap[%d]==%d\n", i, imap[i]);
 }
 
 static void *oshfs_init(struct fuse_conn_info *conn)
 {
-	printf("init\n");
+    printf("init\n");
     size_t blocknr = sizeof(block) / sizeof(block[0]);
     size_t blocksize = size / blocknr;
     //分配存储bmap，imap和inode表的块
@@ -152,7 +152,7 @@ static void *oshfs_init(struct fuse_conn_info *conn)
 
 static int oshfs_getattr(const char *path, struct stat *stbuf)
 {
-	printf("getattr:%s\n", path);
+    printf("getattr:%s\n", path);
     int ret = 0;
     int inodeID = get_inode(path);
     if(strcmp(path, "/") == 0) {
@@ -169,7 +169,7 @@ static int oshfs_getattr(const char *path, struct stat *stbuf)
 
 static int oshfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
-	printf("readdir\n");
+    printf("readdir\n");
     size_t blocknr = sizeof(block) / sizeof(block[0]);
     size_t blocksize = size / blocknr;
     size_t maxinode = blocknr;
@@ -188,7 +188,7 @@ static int oshfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 
 static int oshfs_mknod(const char *path, mode_t mode, dev_t dev)
 {
-	printf("mknod: %s\n", path);
+    printf("mknod: %s\n", path);
     size_t blocknr = sizeof(block) / sizeof(block[0]);
     size_t blocksize = size / blocknr;
     size_t maxinode = blocknr;
@@ -218,7 +218,7 @@ static int oshfs_mknod(const char *path, mode_t mode, dev_t dev)
     //output();
     for(int i=0; i<maxinode; i++)
     {
-    	//printf("imap[%d]==%d\n", i, imap[i]);
+        //printf("imap[%d]==%d\n", i, imap[i]);
         if(imap[i]==0)
         {
             inodeID = i;
@@ -243,40 +243,40 @@ static int oshfs_mknod(const char *path, mode_t mode, dev_t dev)
 
 static int oshfs_open(const char *path, struct fuse_file_info *fi)
 {
-	printf("Open\n");
+    printf("Open\n");
     return 0;
 }
 
 static void bufoutput(const char *buf, int start, int size)
 {
-	for(int i=start; i<start + size; i++)
-		printf("%c", buf[i]);
-	printf("\n\n");
+    for(int i=start; i<start + size; i++)
+        printf("%c", buf[i]);
+    printf("\n\n");
 }
 
 static int oshfs_write(const char *path, const char *buf, size_t size ,off_t offset, struct fuse_file_info *fi)
 {
-	printf("write\n");
+    printf("write\n");
     int inodeID = get_inode(path);
     struct Inode *node = inode[inodeID];
     fblock[node->firstblockID]->st.st_size = offset + size;
     if(offset + size < FCSIZE)
     {  //第一个块可以写完
-    	printf("1:\n");
+        printf("1:\n");
         memcpy(node->first_content + offset, buf, size);
-        bufoutput(buf, 0, size);
+        //bufoutput(buf, 0, size);
         fblock[node->firstblockID]->next = NULL;
         printf("write end1\n");
         return size;
     }else
     {
         int write = 0;					//已写入的字节数
-        int off = 0;                       //已offset的字节数 
+        int off = 0;                       //已offset的字节数
         //memcpy(node->first_content + offset, buf, FCSIZE - offset);
         //write += FCSIZE - offset;
         printf("cmpif!\n");
-        struct NormalBlock *nnode;     
-        if(fblock[node->firstblockID]->next==NULL)             
+        struct NormalBlock *nnode;
+        if(fblock[node->firstblockID]->next==NULL)
         {
             //分配新块
             int newID = new_block();
@@ -287,63 +287,63 @@ static int oshfs_write(const char *path, const char *buf, size_t size ,off_t off
             nnode = fblock[node->firstblockID]->next;
         if(offset>FCSIZE)
         {
-			off+=FCSIZE;
-			printf("ru\n");
-			while(offset-off>NCSIZE)
-			{
-				if(nnode->next==NULL)
-            	{
-                	//分配新块
-                	int newID = new_block();
-                	nnode->next = nblock[newID];
-                	nnode = nnode->next;
-                	nnode->next = NULL;
-            	}else
-                	nnode = nnode->next;
+            off+=FCSIZE;
+            printf("ru\n");
+            while(offset-off>NCSIZE)
+            {
+                if(nnode->next==NULL)
+                {
+                    //分配新块
+                    int newID = new_block();
+                    nnode->next = nblock[newID];
+                    nnode = nnode->next;
+                    nnode->next = NULL;
+                }else
+                    nnode = nnode->next;
                 off+=NCSIZE;
             }
             //offset开始处已经在此nnode内，讨论此块是否够写
-			if(offset-off+size<NCSIZE)
-			{
-				printf("zu gou");
-				memcpy(nnode->content+offset-off, buf, size);
-				bufoutput(buf, 0, size);
-				write += size;
-				off = offset;
-				return size; 
-			}else
-			{
-				printf("bu gou");
-				memcpy(nnode->content+offset-off, buf, NCSIZE-(offset-off));
-				bufoutput(buf, 0, NCSIZE-(offset-off));
-				write += NCSIZE-(offset-off);
-				off = offset;
-				if(nnode->next==NULL)
-            	{
-                	//分配新块
-                	int newID = new_block();
-                	nnode->next = nblock[newID];
-                	nnode = nnode->next;
-                	nnode->next = NULL;
-            	}else
-                	nnode = nnode->next;
+            if(offset-off+size<NCSIZE)
+            {
+                printf("zu gou");
+                memcpy(nnode->content+offset-off, buf, size);
+                //bufoutput(buf, 0, size);
+                write += size;
+                off = offset;
+                return size;
+            }else
+            {
+                printf("bu gou");
+                memcpy(nnode->content+offset-off, buf, NCSIZE-(offset-off));
+                //bufoutput(buf, 0, NCSIZE-(offset-off));
+                write += NCSIZE-(offset-off);
+                off = offset;
+                if(nnode->next==NULL)
+                {
+                    //分配新块
+                    int newID = new_block();
+                    nnode->next = nblock[newID];
+                    nnode = nnode->next;
+                    nnode->next = NULL;
+                }else
+                    nnode = nnode->next;
             }
-		}
-		else
-		{
-			printf("chu\n");
-			memcpy(node->first_content + offset, buf, FCSIZE - offset);
-			printf("2:\n");
-        	bufoutput(buf, 0, FCSIZE - offset);
-        	write += FCSIZE - offset;	
-        	off = offset; 
-		}
+        }
+        else
+        {
+            printf("chu\n");
+            memcpy(node->first_content + offset, buf, FCSIZE - offset);
+            printf("2:\n");
+            //bufoutput(buf, 0, FCSIZE - offset);
+            write += FCSIZE - offset;
+            off = offset;
+        }
         while(size-write>NCSIZE)
         {
-        	printf("offset,off:%d,%d\n", offset, off);
+            printf("offset,off:%d,%d\n", offset, off);
             memcpy(nnode->content, &buf[write], NCSIZE);
             printf("3:\n");
-        	bufoutput(buf, write, NCSIZE);
+            //bufoutput(buf, write, NCSIZE);
             write += NCSIZE;
             if(nnode->next==NULL)
             {
@@ -357,7 +357,7 @@ static int oshfs_write(const char *path, const char *buf, size_t size ,off_t off
         }
         printf("4:\n");
         memcpy(nnode->content, &buf[write], size-write);
-        bufoutput(buf, write, size-write);
+        //bufoutput(buf, write, size-write);
         nnode->next = NULL;
         printf("write end2\n");
         return size;
@@ -366,14 +366,17 @@ static int oshfs_write(const char *path, const char *buf, size_t size ,off_t off
 
 static int oshfs_truncate(const char *path, off_t size)
 {
-	printf("truncate\n");
+    printf("truncate\n");
     int inodeID = get_inode(path);
     struct Inode *node = inode[inodeID];
     fblock[node->firstblockID]->st.st_size = size;
     if(size < FCSIZE)
     {  //第一个块足够
-        release_block((void *)fblock[node->firstblockID]->next);
-        fblock[node->firstblockID]->next = NULL;
+        if(fblock[node->firstblockID]->next!=NULL)
+        {
+            release_block((void *) fblock[node->firstblockID]->next);
+            fblock[node->firstblockID]->next = NULL;
+        }
         printf("truncate end1\n");
         return 0;
     }else
@@ -403,8 +406,11 @@ static int oshfs_truncate(const char *path, off_t size)
             }else
                 nnode = nnode->next;
         }
-        release_block((void *)nnode->next);
-        nnode->next = NULL;
+        if(nnode->next!=NULL)
+        {
+            release_block((void *) nnode->next);
+            nnode->next = NULL;
+        }
         printf("truncate end2\n");
         return 0;
     }
@@ -412,20 +418,20 @@ static int oshfs_truncate(const char *path, off_t size)
 
 static void bread()
 {
-	for(int i=18; i<22; i++)
-	{
-		printf("\n-----------------------------------------------\n%d:\n", i);
-		for(int j=0; j<32*1024; j++)
-			printf("%c", *((char *)block[i] +j));
-	}
-	int i;
-	scanf("%d", &i);
+    for(int i=18; i<22; i++)
+    {
+        printf("\n-----------------------------------------------\n%d:\n", i);
+        for(int j=0; j<32*1024; j++)
+            printf("%c", *((char *)block[i] +j));
+    }
+    int i;
+    scanf("%d", &i);
 }
 
 static int oshfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
-	printf("read\n");
-	//bread();
+    printf("read\n");
+    //bread();
     int inodeID = get_inode(path);
     struct Inode *node = inode[inodeID];
     int ret = size;
@@ -435,7 +441,7 @@ static int oshfs_read(const char *path, char *buf, size_t size, off_t offset, st
     {
         int read=0;                    //已读字节数
         int left=fblock[node->firstblockID]->st.st_size; //文件剩余字节数
-        int off=0;                          //已经offset的字节数 
+        int off=0;                          //已经offset的字节数
         if(offset + size <= FCSIZE)
         {
             if(offset + size > left)
@@ -448,12 +454,12 @@ static int oshfs_read(const char *path, char *buf, size_t size, off_t offset, st
         {
             if(fblock[node->firstblockID]->next==NULL)
             {
-            	if(offset>FCSIZE)
-            	{
-            		printf("2offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
-            		return 0;
-            	}
-            	printf("3offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                if(offset>FCSIZE)
+                {
+                    printf("2offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                    return 0;
+                }
+                printf("3offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
                 ret = left - offset;
                 memcpy(buf, node->first_content + offset, ret);
                 printf("read end2\n");
@@ -463,84 +469,84 @@ static int oshfs_read(const char *path, char *buf, size_t size, off_t offset, st
             //read = FCSIZE - offset;
             //left -= FCSIZE - offset;
             //以上都是考虑到第一个块的特殊情况，以下是普通内容块情况
-			struct NormalBlock *nnode = fblock[node->firstblockID]->next;
+            struct NormalBlock *nnode = fblock[node->firstblockID]->next;
             if(offset>FCSIZE)
             {
-            	off += FCSIZE;
-            	left -= FCSIZE;
-            	while(offset-off>NCSIZE)
-            	{
-            		if(nnode->next!=NULL)
-            		{
-            			off += NCSIZE;
-            			left -= NCSIZE;
-            			nnode = nnode->next;
-            		}else
-            		{
-            			printf("4offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
-            			return 0;
-            		}
-            	}
-            	if(left<offset-off)
-            	{
-            		printf("5offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
-            		return 0;
-            	}
-            	else
-            	{
-            		if(left>NCSIZE)
-            		{
-            			if(offset-off+size<=NCSIZE)
-            			{
-            				printf("off1\n");
-            				printf("6offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
-            				memcpy(&buf[read], nnode->content+(offset-off), size);
-            				read+= size;
-            				left-= size;
-            				return size;
-            			}else
-            			{
-            				printf("off2\n");
-            				printf("7offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
-            				memcpy(&buf[read], nnode->content+(offset-off), NCSIZE-(offset-off));
-            				read+= NCSIZE-(offset-off);
-            				left-= NCSIZE;
-            				off = offset;
-            				nnode = nnode->next;
-            			}
-            		}else
-            		{
-            			if(offset-off+size<=left)
-            			{
-            				printf("off3\n");
-            				printf("8offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
-            				memcpy(&buf[read], nnode->content+(offset-off), size);
-            				read+= size;
-            				left-= size;
-            				return size;
-            			}else
-            			{
-            				printf("off4\n");
-            				printf("9offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
-            				memcpy(&buf[read], nnode->content+(offset-off), left-(offset-off));
-            				return left-(offset-off);
-            			}
-            		}
-            	}
+                off += FCSIZE;
+                left -= FCSIZE;
+                while(offset-off>NCSIZE)
+                {
+                    if(nnode->next!=NULL)
+                    {
+                        off += NCSIZE;
+                        left -= NCSIZE;
+                        nnode = nnode->next;
+                    }else
+                    {
+                        printf("4offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                        return 0;
+                    }
+                }
+                if(left<offset-off)
+                {
+                    printf("5offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                    return 0;
+                }
+                else
+                {
+                    if(left>NCSIZE)
+                    {
+                        if(offset-off+size<=NCSIZE)
+                        {
+                            printf("off1\n");
+                            printf("6offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                            memcpy(&buf[read], nnode->content+(offset-off), size);
+                            read+= size;
+                            left-= size;
+                            return size;
+                        }else
+                        {
+                            printf("off2\n");
+                            printf("7offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                            memcpy(&buf[read], nnode->content+(offset-off), NCSIZE-(offset-off));
+                            read+= NCSIZE-(offset-off);
+                            left-= NCSIZE;
+                            off = offset;
+                            nnode = nnode->next;
+                        }
+                    }else
+                    {
+                        if(offset-off+size<=left)
+                        {
+                            printf("off3\n");
+                            printf("8offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                            memcpy(&buf[read], nnode->content+(offset-off), size);
+                            read+= size;
+                            left-= size;
+                            return size;
+                        }else
+                        {
+                            printf("off4\n");
+                            printf("9offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                            memcpy(&buf[read], nnode->content+(offset-off), left-(offset-off));
+                            return left-(offset-off);
+                        }
+                    }
+                }
             }else
             {
-            	printf("10offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
-            	memcpy(buf, node->first_content + offset, FCSIZE-offset);
-            	read += FCSIZE - offset;
-            	left -= FCSIZE;
+                printf("10offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                memcpy(buf, node->first_content + offset, FCSIZE-offset);
+                read += FCSIZE - offset;
+                left -= FCSIZE;
             }
-            // 以上是处理offset，即处理开始位置 
+            // 以上是处理offset，即处理开始位置
             printf("start:\n");
             printf("num:%d\n", nnode->num);
             while(nnode->next!=NULL&&size-read>NCSIZE)
             {				//若存在下一个文件块
-            	printf("0\n");
-            	printf("11offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                printf("0\n");
+                printf("11offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
                 memcpy(&buf[read], nnode->content, NCSIZE);
                 read += NCSIZE;
                 left -= NCSIZE;
@@ -552,8 +558,8 @@ static int oshfs_read(const char *path, char *buf, size_t size, off_t offset, st
             {
                 if(left<size-read)
                 {			//1
-                	printf("1\n");
-                	printf("12offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                    printf("1\n");
+                    printf("12offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
                     memcpy(&buf[read], nnode->content, left);
                     read += left;
                     left -= left;
@@ -562,8 +568,8 @@ static int oshfs_read(const char *path, char *buf, size_t size, off_t offset, st
                     return ret;
                 }else
                 {			//3
-                	printf("3\n");
-                	printf("13offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                    printf("3\n");
+                    printf("13offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
                     memcpy(&buf[read], nnode->content, size-read);
                     printf("read end4\n");
                     return ret;
@@ -571,8 +577,8 @@ static int oshfs_read(const char *path, char *buf, size_t size, off_t offset, st
             }
             if(size-read<NCSIZE)
             {				//2
-            	printf("2\n");
-            	printf("14offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
+                printf("2\n");
+                printf("14offset:%d, off:%d, size:%d, read:%d, left:%d\n", offset, off, size, read, left);
                 memcpy(&buf[read], nnode->content, size-read);
                 printf("read end5\n");
                 return ret;
@@ -583,7 +589,7 @@ static int oshfs_read(const char *path, char *buf, size_t size, off_t offset, st
 
 static int oshfs_unlink(const char *path)
 {
-	printf("unlink: %s\n", path);
+    printf("unlink: %s\n", path);
     int inodeID = get_inode(path);
     struct Inode *node = inode[inodeID];
     release_block((void *)fblock[node->firstblockID]);
