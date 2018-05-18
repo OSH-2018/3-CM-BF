@@ -214,7 +214,7 @@ static int oshfs_mknod(const char *path, mode_t mode, dev_t dev)
             nameint = i;
     strcpy(name, &path[nameint+1]);
     //查询imap
-    int inodeID;
+    int inodeID = -1;
     //output();
     for(int i=0; i<maxinode; i++)
     {
@@ -225,6 +225,7 @@ static int oshfs_mknod(const char *path, mode_t mode, dev_t dev)
             break;
         }
     }
+    if(inodeID == -1) return -errno;
     imap[inodeID] = 1;     //imap置1表占用
     printf("\nnew inode:%d\n", inodeID);
     inode[inodeID]->info = FILE;
@@ -258,6 +259,7 @@ static int oshfs_write(const char *path, const char *buf, size_t size ,off_t off
 {
     printf("write\n");
     int inodeID = get_inode(path);
+    if(inodeID == -1) return -errno;
     struct Inode *node = inode[inodeID];
     fblock[node->firstblockID]->st.st_size = offset + size;
     if(offset + size < FCSIZE)
@@ -368,6 +370,7 @@ static int oshfs_truncate(const char *path, off_t size)
 {
     printf("truncate\n");
     int inodeID = get_inode(path);
+    if(inodeID == -1) return -errno;
     struct Inode *node = inode[inodeID];
     fblock[node->firstblockID]->st.st_size = size;
     if(size < FCSIZE)
@@ -433,6 +436,7 @@ static int oshfs_read(const char *path, char *buf, size_t size, off_t offset, st
     printf("read\n");
     //bread();
     int inodeID = get_inode(path);
+    if(inodeID == -1) return -errno;
     struct Inode *node = inode[inodeID];
     int ret = size;
     if(node->first_content==NULL)
@@ -591,12 +595,14 @@ static int oshfs_unlink(const char *path)
 {
     printf("unlink: %s\n", path);
     int inodeID = get_inode(path);
+    if(inodeID == -1) return -errno;
     struct Inode *node = inode[inodeID];
     release_block((void *)fblock[node->firstblockID]);
     imap[inodeID] = 0;
     printf("unlink end\n");
     return 0;
 }
+
 
 static const struct fuse_operations op = {
         .init = oshfs_init,
